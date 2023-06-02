@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "BalanceResponse",
+  "title": "BalanceResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["balance", "transactions"],
+  "properties": {
+    "balance": {
+      "type": "number"
+    },
+    "transactions": {
+      "type": "array",
+      "items": {
+        "$ref": "src/schema/transaction_dynamo.json"
+      }
+    }
+  }
+}

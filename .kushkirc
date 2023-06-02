@@ -1,0 +1,13 @@
+{
+  "errorPrefix": "STR",
+  "json2ts": {
+    "output": "./types",
+    "remote": [
+      "https://s3.amazonaws.com/kushki-static/schemas/usrv-cash/v1/sync_merchant_stream.json"
+    ],
+    "dirs": ["src/schema"]
+  },
+  "ssm": {
+    "CERTIFICATE": "CERTIFICATE_NAME"
+  }
+}

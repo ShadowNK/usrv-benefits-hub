@@ -1,0 +1,325 @@
+service: &service
+  name: usrv-benefits-hub
+provider:
+  name: aws
+  runtime: nodejs16.x
+  architecture: arm64
+  stage: ${env:USRV_STAGE, "qa"}
+  timeout: 29
+  logRetentionInDays: 7
+  stackTags: ${self:custom.kushkiTag}
+  environment:
+    USRV_STAGE: ${self:provider.stage}
+    USRV_NAME: ${self:custom.service.name}
+    USRV_COMMIT: ${env:USRV_COMMIT, "commit"}
+    USRV_BRANCH: ${env:USRV_BRANCH, "branch"}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: "*"
+    - Effect: "Allow"
+      Action:
+        - ssm:GetParameter
+        - ssm:GetParameters
+        - ssm:GetParametersByPath
+      Resource: "*"
+    - Effect: "Allow"
+      Action:
+        - cloudwatch:PutMetricData
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource: "*"
+custom:
+  service: *service
+  prefix: /${self:provider.stage}/${self:custom.service.name}
+  version: v1
+  webpack:
+    packager: "npm"
+    includeModules:
+      forceInclude:
+        - jsonpath
+      forceExclude:
+        - aws-sdk
+  tagEnv:
+    ci: TESTING
+    qa: TESTING
+    uat: TESTING
+    stg: TESTING
+    primary: PRODUCTION
+  enabled:
+    ci: true
+    qa: true
+    po: true
+    uat: true
+    stg: false
+    primary: false
+  prune:
+    automatic: true
+    number: 3
+  apiGatewayCaching:
+    enabled: false
+    ttlInSeconds: 0
+#  customDomain:
+#    basePath: ${ssm:${self:custom.prefix}/BASE_PATH, self:provider.stage}
+#    domainName: ${ssm:${self:custom.prefix}/DOMAIN}
+#    stage: ${self:provider.stage}
+#    certificateName: ${ssm:${self:custom.prefix}/CERTIFICATE_NAME}
+#    createRoute53Record: false
+  apigwBinary:
+    types:
+      - "text/plain"
+  alerts:
+    dashboards: true
+  deploymentSettings:
+    stages:
+      - qa
+    type: "AllAtOnce"
+    alias: Live
+  apiGatewayTags: ${self:custom.kushkiTag}
+  kushkiTag:
+    COST: BY TRANSACTION
+    SERVICE: CARD
+    INTEGRATION: KUSHKI
+    ENVIRONMENT: ${self:custom.tagEnv.${self:provider.stage}}
+  dynamoTag:
+    - Key: ENVIRONMENT
+      Value: ${self:custom.tagEnv.${self:provider.stage}}
+    - Key: INTEGRATION
+      Value: KUSHKI
+    - Key: SERVICE
+      Value: STARTER
+    - Key: COST
+      Value: FIXED
+  cloudWatchLogsTags: ${self:custom.kushkiTag}
+
+plugins:
+  - serverless-api-gateway-caching
+  - serverless-apigw-binary
+  - serverless-cloudformation-resource-counter
+  - serverless-iam-roles-per-function
+  - serverless-localstack
+  - serverless-plugin-aws-alerts
+  - serverless-plugin-canary-deployments
+  - serverless-plugin-split-stacks
+  - serverless-plugin-tracing
+  - serverless-prune-plugin
+  - serverless-pseudo-parameters
+  - serverless-tag-api-gateway
+  - serverless-tag-cloud-watch-logs
+  - serverless-webpack
+#  - serverless-domain-manager
+
+package:
+  individually: true
+  excludeDevDependencies: true
+  exclude:
+    - "src/handler/*.LICENSE"
+
+functions:
+  balance:
+    handler: src/handler/BalanceHandler.HANDLER
+    deploymentSettings: ${self:custom.deploymentSettings}
+    events:
+      - http:
+          method: get
+          path: ${self:custom.version}/balance
+  recognition:
+    handler: src/handler/CreateRecognitionHandler.HANDLER
+    deploymentSettings: ${self:custom.deploymentSettings}
+    events:
+      - http:
+          method: get
+          path: ${self:custom.version}/recognition
+  transaction:
+    handler: src/handler/CreateTransactionHandle.HANDLER
+    deploymentSettings: ${self:custom.deploymentSettings}
+    events:
+      - http:
+          method: get
+          path: ${self:custom.version}/transaction
+  createTransaction:
+    handler: src/handler/CreateTransactionHandle.HANDLER
+    deploymentSettings: ${self:custom.deploymentSettings}
+    events:
+      - http:
+          method: post
+          path: ${self:custom.version}/transaction
+  login:
+    handler: src/handler/CreateTransactionHandle.HANDLER
+    deploymentSettings: ${self:custom.deploymentSettings}
+    events:
+      - http:
+          method: post
+          path: ${self:custom.version}/transaction
+resources:
+  Resources:
+    users:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:custom.service.name}-${self:provider.stage}-users
+        Tags: ${self:custom.dynamoTag}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+          - AttributeName: token
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+          - AttributeName: token
+            KeyType: RANGE
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        GlobalSecondaryIndexes:
+          - IndexName: existUserIndex
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: getUserByTokenIndex
+            KeySchema:
+              - AttributeName: token
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+    orders:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:custom.service.name}-${self:provider.stage}-orders
+        Tags: ${self:custom.dynamoTag}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: orderId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: orderId
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    rewards:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:custom.service.name}-${self:provider.stage}-rewards
+        Tags: ${self:custom.dynamoTag}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: rewardId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: rewardId
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        GlobalSecondaryIndexes:
+          - IndexName: getRewardById
+            KeySchema:
+              - AttributeName: rewardId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+    shopppingCart:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:custom.service.name}-${self:provider.stage}-shopppingCart
+        Tags: ${self:custom.dynamoTag}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: userEmail
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userEmail
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    transactions:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:custom.service.name}-${self:provider.stage}-transactions
+        Tags: ${self:custom.dynamoTag}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: transactionId
+            AttributeType: S
+          - AttributeName: fromWalletId
+            AttributeType: S
+          - AttributeName: toWalletId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: transactionId
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        GlobalSecondaryIndexes:
+          - IndexName: getTransactionIdIndex
+            KeySchema:
+              - AttributeName: transactionId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: getFromWalletIndex
+            KeySchema:
+              - AttributeName: fromWalletId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: getToWalletIndex
+            KeySchema:
+              - AttributeName: toWalletId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+    wallets:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:custom.service.name}-${self:provider.stage}-wallets
+        Tags: ${self:custom.dynamoTag}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: walletId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: walletId
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        GlobalSecondaryIndexes:
+          - IndexName: getWalletIDIndex
+            KeySchema:
+              - AttributeName: walletId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+    products:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:custom.service.name}-${self:provider.stage}-products
+        Tags: ${self:custom.dynamoTag}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: productId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: productId
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    recognitions:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        TableName: ${self:custom.service.name}-${self:provider.stage}-recognitions
+        Tags: ${self:custom.dynamoTag}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: recognitionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: recognitionId
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES

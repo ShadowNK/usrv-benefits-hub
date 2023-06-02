@@ -1,0 +1,1585 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "ServerlessDeploymentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }
+      },
+      "DependsOn": []
+    },
+    "ServerlessDeploymentBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "ServerlessDeploymentBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": false
+                }
+              }
+            }
+          ]
+        }
+      },
+      "DependsOn": []
+    },
+    "BalanceLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/usrv-benefits-hub-qa-balance",
+        "RetentionInDays": 7
+      },
+      "DependsOn": []
+    },
+    "RecognitionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/usrv-benefits-hub-qa-recognition",
+        "RetentionInDays": 7
+      },
+      "DependsOn": []
+    },
+    "TransactionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/usrv-benefits-hub-qa-transaction",
+        "RetentionInDays": 7
+      },
+      "DependsOn": []
+    },
+    "CreateTransactionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/usrv-benefits-hub-qa-createTransaction",
+        "RetentionInDays": 7
+      },
+      "DependsOn": []
+    },
+    "LoginLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/usrv-benefits-hub-qa-login",
+        "RetentionInDays": 7
+      },
+      "DependsOn": []
+    },
+    "IamRoleLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "usrv-benefits-hub",
+                  "qa",
+                  "lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": [
+                        "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/usrv-benefits-hub-qa*:*",
+                        {}
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": [
+                        "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/usrv-benefits-hub-qa*:*:*",
+                        {}
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssm:GetParameter",
+                    "ssm:GetParameters",
+                    "ssm:GetParametersByPath"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudwatch:PutMetricData"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:InvokeFunction"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              "usrv-benefits-hub",
+              "qa",
+              {
+                "Ref": "AWS::Region"
+              },
+              "lambdaRole"
+            ]
+          ]
+        }
+      },
+      "DependsOn": []
+    },
+    "BalanceLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/usrv-benefits-hub/qa/1685689315652-2023-06-02T07:01:55.652Z/balance.zip"
+        },
+        "FunctionName": "usrv-benefits-hub-qa-balance",
+        "Handler": "src/handler/BalanceHandler.HANDLER",
+        "MemorySize": 1024,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 29,
+        "Environment": {
+          "Variables": {
+            "USRV_STAGE": "qa",
+            "USRV_NAME": "usrv-benefits-hub",
+            "USRV_COMMIT": "commit",
+            "USRV_BRANCH": "branch"
+          }
+        },
+        "TracingConfig": {
+          "Mode": "PassThrough"
+        }
+      },
+      "DependsOn": [
+        "BalanceLogGroup"
+      ]
+    },
+    "RecognitionLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/usrv-benefits-hub/qa/1685689315652-2023-06-02T07:01:55.652Z/recognition.zip"
+        },
+        "FunctionName": "usrv-benefits-hub-qa-recognition",
+        "Handler": "src/handler/CreateRecognitionHandler.HANDLER",
+        "MemorySize": 1024,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 29,
+        "Environment": {
+          "Variables": {
+            "USRV_STAGE": "qa",
+            "USRV_NAME": "usrv-benefits-hub",
+            "USRV_COMMIT": "commit",
+            "USRV_BRANCH": "branch"
+          }
+        },
+        "TracingConfig": {
+          "Mode": "PassThrough"
+        }
+      },
+      "DependsOn": [
+        "RecognitionLogGroup"
+      ]
+    },
+    "TransactionLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/usrv-benefits-hub/qa/1685689315652-2023-06-02T07:01:55.652Z/transaction.zip"
+        },
+        "FunctionName": "usrv-benefits-hub-qa-transaction",
+        "Handler": "src/handler/CreateTransactionHandle.HANDLER",
+        "MemorySize": 1024,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 29,
+        "Environment": {
+          "Variables": {
+            "USRV_STAGE": "qa",
+            "USRV_NAME": "usrv-benefits-hub",
+            "USRV_COMMIT": "commit",
+            "USRV_BRANCH": "branch"
+          }
+        },
+        "TracingConfig": {
+          "Mode": "PassThrough"
+        }
+      },
+      "DependsOn": [
+        "TransactionLogGroup"
+      ]
+    },
+    "CreateTransactionLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/usrv-benefits-hub/qa/1685689315652-2023-06-02T07:01:55.652Z/createTransaction.zip"
+        },
+        "FunctionName": "usrv-benefits-hub-qa-createTransaction",
+        "Handler": "src/handler/CreateTransactionHandle.HANDLER",
+        "MemorySize": 1024,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 29,
+        "Environment": {
+          "Variables": {
+            "USRV_STAGE": "qa",
+            "USRV_NAME": "usrv-benefits-hub",
+            "USRV_COMMIT": "commit",
+            "USRV_BRANCH": "branch"
+          }
+        },
+        "TracingConfig": {
+          "Mode": "PassThrough"
+        }
+      },
+      "DependsOn": [
+        "CreateTransactionLogGroup"
+      ]
+    },
+    "LoginLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/usrv-benefits-hub/qa/1685689315652-2023-06-02T07:01:55.652Z/login.zip"
+        },
+        "FunctionName": "usrv-benefits-hub-qa-login",
+        "Handler": "src/handler/CreateTransactionHandle.HANDLER",
+        "MemorySize": 1024,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs16.x",
+        "Timeout": 29,
+        "Environment": {
+          "Variables": {
+            "USRV_STAGE": "qa",
+            "USRV_NAME": "usrv-benefits-hub",
+            "USRV_COMMIT": "commit",
+            "USRV_BRANCH": "branch"
+          }
+        },
+        "TracingConfig": {
+          "Mode": "PassThrough"
+        }
+      },
+      "DependsOn": [
+        "LoginLogGroup"
+      ]
+    },
+    "ApiGatewayMethodV1BalanceGet": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "GET",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "APINestedStack",
+            "Outputs.ApiGatewayResourceV1Balance"
+          ]
+        },
+        "RestApiId": {
+          "Fn::GetAtt": [
+            "APINestedStack",
+            "Outputs.ApiGatewayRestApi"
+          ]
+        },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Ref": "BalanceLambdaFunctionAliasLive"
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": [
+        "APINestedStack"
+      ]
+    },
+    "ApiGatewayMethodV1RecognitionGet": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "GET",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "APINestedStack",
+            "Outputs.ApiGatewayResourceV1Recognition"
+          ]
+        },
+        "RestApiId": {
+          "Fn::GetAtt": [
+            "APINestedStack",
+            "Outputs.ApiGatewayRestApi"
+          ]
+        },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Ref": "RecognitionLambdaFunctionAliasLive"
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": [
+        "APINestedStack"
+      ]
+    },
+    "ApiGatewayMethodV1TransactionGet": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "GET",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "APINestedStack",
+            "Outputs.ApiGatewayResourceV1Transaction"
+          ]
+        },
+        "RestApiId": {
+          "Fn::GetAtt": [
+            "APINestedStack",
+            "Outputs.ApiGatewayRestApi"
+          ]
+        },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Ref": "TransactionLambdaFunctionAliasLive"
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": [
+        "APINestedStack"
+      ]
+    },
+    "ApiGatewayMethodV1TransactionPost": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "POST",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "APINestedStack",
+            "Outputs.ApiGatewayResourceV1Transaction"
+          ]
+        },
+        "RestApiId": {
+          "Fn::GetAtt": [
+            "APINestedStack",
+            "Outputs.ApiGatewayRestApi"
+          ]
+        },
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Ref": "LoginLambdaFunctionAliasLive"
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      },
+      "DependsOn": [
+        "APINestedStack"
+      ]
+    },
+    "ApiGatewayDeployment1685689220893": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "RestApiId": {
+          "Fn::GetAtt": [
+            "APINestedStack",
+            "Outputs.ApiGatewayRestApi"
+          ]
+        },
+        "StageName": "qa"
+      },
+      "DependsOn": [
+        "ApiGatewayMethodV1BalanceGet",
+        "ApiGatewayMethodV1RecognitionGet",
+        "ApiGatewayMethodV1TransactionGet",
+        "ApiGatewayMethodV1TransactionPost",
+        "APINestedStack"
+      ]
+    },
+    "AlertsDashboard": {
+      "Type": "AWS::CloudWatch::Dashboard",
+      "Properties": {
+        "DashboardName": "usrv-benefits-hub-qa-us-east-1",
+        "DashboardBody": "{\"widgets\":[{\"type\":\"metric\",\"x\":0,\"y\":0,\"width\":8,\"height\":6,\"properties\":{\"title\":\"Errors\",\"view\":\"timeSeries\",\"stacked\":false,\"metrics\":[[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"usrv-benefits-hub-qa-balance\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"balance\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"usrv-benefits-hub-qa-recognition\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"recognition\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"usrv-benefits-hub-qa-transaction\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"transaction\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"usrv-benefits-hub-qa-createTransaction\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"createTransaction\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"usrv-benefits-hub-qa-login\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"login\"}]],\"region\":\"us-east-1\",\"period\":300}},{\"type\":\"metric\",\"x\":8,\"y\":0,\"width\":6,\"height\":6,\"properties\":{\"title\":\"Errors\",\"view\":\"singleValue\",\"metrics\":[[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"usrv-benefits-hub-qa-balance\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"balance\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"usrv-benefits-hub-qa-recognition\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"recognition\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"usrv-benefits-hub-qa-transaction\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"transaction\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"usrv-benefits-hub-qa-createTransaction\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"createTransaction\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"usrv-benefits-hub-qa-login\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"login\"}]],\"region\":\"us-east-1\",\"period\":300}},{\"type\":\"metric\",\"x\":14,\"y\":0,\"width\":10,\"height\":6,\"properties\":{\"title\":\"Duration\",\"view\":\"timeSeries\",\"stacked\":false,\"metrics\":[[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"usrv-benefits-hub-qa-balance\",{\"stat\":\"p50\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"balance p50\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"usrv-benefits-hub-qa-balance\",{\"stat\":\"p90\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"balance p90\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"usrv-benefits-hub-qa-recognition\",{\"stat\":\"p50\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"recognition p50\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"usrv-benefits-hub-qa-recognition\",{\"stat\":\"p90\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"recognition p90\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"usrv-benefits-hub-qa-transaction\",{\"stat\":\"p50\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"transaction p50\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"usrv-benefits-hub-qa-transaction\",{\"stat\":\"p90\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"transaction p90\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"usrv-benefits-hub-qa-createTransaction\",{\"stat\":\"p50\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"createTransaction p50\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"usrv-benefits-hub-qa-createTransaction\",{\"stat\":\"p90\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"createTransaction p90\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"usrv-benefits-hub-qa-login\",{\"stat\":\"p50\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"login p50\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"usrv-benefits-hub-qa-login\",{\"stat\":\"p90\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"login p90\"}]],\"region\":\"us-east-1\",\"period\":300}},{\"type\":\"metric\",\"x\":0,\"y\":6,\"width\":8,\"height\":6,\"properties\":{\"title\":\"Invocations\",\"view\":\"timeSeries\",\"stacked\":false,\"metrics\":[[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"usrv-benefits-hub-qa-balance\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"balance\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"usrv-benefits-hub-qa-recognition\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"recognition\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"usrv-benefits-hub-qa-transaction\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"transaction\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"usrv-benefits-hub-qa-createTransaction\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"createTransaction\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"usrv-benefits-hub-qa-login\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"login\"}]],\"region\":\"us-east-1\",\"period\":300}},{\"type\":\"metric\",\"x\":8,\"y\":6,\"width\":6,\"height\":6,\"properties\":{\"title\":\"Invocations\",\"view\":\"singleValue\",\"metrics\":[[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"usrv-benefits-hub-qa-balance\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"balance\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"usrv-benefits-hub-qa-recognition\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"recognition\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"usrv-benefits-hub-qa-transaction\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"transaction\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"usrv-benefits-hub-qa-createTransaction\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"createTransaction\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"usrv-benefits-hub-qa-login\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"login\"}]],\"region\":\"us-east-1\",\"period\":300}},{\"type\":\"metric\",\"x\":14,\"y\":6,\"width\":10,\"height\":6,\"properties\":{\"title\":\"API Requests\",\"view\":\"timeSeries\",\"stacked\":false,\"metrics\":[[\"AWS/ApiGateway\",\"5XXError\",\"ApiName\",\"qa-usrv-benefits-hub\",{\"stat\":\"Sum\",\"period\":900}],[\"AWS/ApiGateway\",\"4XXError\",\"ApiName\",\"qa-usrv-benefits-hub\",{\"stat\":\"Sum\",\"period\":900}],[\"AWS/ApiGateway\",\"Count\",\"ApiName\",\"qa-usrv-benefits-hub\",{\"stat\":\"Sum\",\"period\":900}]],\"region\":\"us-east-1\"}},{\"type\":\"metric\",\"x\":0,\"y\":12,\"width\":8,\"height\":6,\"properties\":{\"title\":\"Throttles\",\"view\":\"timeSeries\",\"stacked\":false,\"metrics\":[[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"usrv-benefits-hub-qa-balance\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"balance\"}],[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"usrv-benefits-hub-qa-recognition\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"recognition\"}],[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"usrv-benefits-hub-qa-transaction\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"transaction\"}],[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"usrv-benefits-hub-qa-createTransaction\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"createTransaction\"}],[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"usrv-benefits-hub-qa-login\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-1\",\"label\":\"login\"}]],\"region\":\"us-east-1\",\"period\":300}},{\"type\":\"metric\",\"x\":8,\"y\":12,\"width\":6,\"height\":6,\"properties\":{\"title\":\"Throttles\",\"view\":\"singleValue\",\"metrics\":[[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"usrv-benefits-hub-qa-balance\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"balance\"}],[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"usrv-benefits-hub-qa-recognition\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"recognition\"}],[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"usrv-benefits-hub-qa-transaction\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"transaction\"}],[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"usrv-benefits-hub-qa-createTransaction\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"createTransaction\"}],[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"usrv-benefits-hub-qa-login\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-1\",\"label\":\"login\"}]],\"region\":\"us-east-1\",\"period\":300}},{\"type\":\"metric\",\"x\":14,\"y\":12,\"width\":10,\"height\":6,\"properties\":{\"title\":\"API Latency\",\"view\":\"timeSeries\",\"stacked\":false,\"metrics\":[[\"AWS/ApiGateway\",\"IntegrationLatency\",\"ApiName\",\"qa-usrv-benefits-hub\",{\"stat\":\"p50\",\"period\":900,\"region\":\"us-east-1\"}],[\"AWS/ApiGateway\",\"Latency\",\"ApiName\",\"qa-usrv-benefits-hub\",{\"stat\":\"p50\",\"period\":900,\"region\":\"us-east-1\"}],[\"AWS/ApiGateway\",\"IntegrationLatency\",\"ApiName\",\"qa-usrv-benefits-hub\",{\"stat\":\"p90\",\"period\":900,\"region\":\"us-east-1\"}],[\"AWS/ApiGateway\",\"Latency\",\"ApiName\",\"qa-usrv-benefits-hub\",{\"stat\":\"p90\",\"period\":900,\"region\":\"us-east-1\"}]],\"region\":\"us-east-1\"}}]}"
+      },
+      "DependsOn": []
+    },
+    "UsrvbenefitshubqaDeploymentApplication": {
+      "Type": "AWS::CodeDeploy::Application",
+      "Properties": {
+        "ComputePlatform": "Lambda"
+      },
+      "DependsOn": []
+    },
+    "CodeDeployServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda",
+          "arn:aws:iam::aws:policy/AWSLambda_FullAccess"
+        ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "codedeploy.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "DependsOn": []
+    },
+    "BalanceLambdaFunctionDeploymentGroup": {
+      "Type": "AWS::CodeDeploy::DeploymentGroup",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "UsrvbenefitshubqaDeploymentApplication"
+        },
+        "AutoRollbackConfiguration": {
+          "Enabled": true,
+          "Events": [
+            "DEPLOYMENT_FAILURE",
+            "DEPLOYMENT_STOP_ON_ALARM",
+            "DEPLOYMENT_STOP_ON_REQUEST"
+          ]
+        },
+        "DeploymentConfigName": {
+          "Fn::Sub": [
+            "CodeDeployDefault.Lambda${ConfigName}",
+            {
+              "ConfigName": "AllAtOnce"
+            }
+          ]
+        },
+        "DeploymentStyle": {
+          "DeploymentType": "BLUE_GREEN",
+          "DeploymentOption": "WITH_TRAFFIC_CONTROL"
+        },
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "CodeDeployServiceRole",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": []
+    },
+    "BalanceLambdaFunctionAliasLive": {
+      "Type": "AWS::Lambda::Alias",
+      "Properties": {
+        "FunctionVersion": {
+          "Fn::GetAtt": [
+            "VersionsNestedStack",
+            "Outputs.BalanceLambdaVersionezn37AfrOBVlOVfsLHfif8Mlf27PLDAMDLfs8iYZ4gsVersion"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "BalanceLambdaFunction"
+        },
+        "Name": "Live"
+      },
+      "UpdatePolicy": {
+        "CodeDeployLambdaAliasUpdate": {
+          "ApplicationName": {
+            "Ref": "UsrvbenefitshubqaDeploymentApplication"
+          },
+          "DeploymentGroupName": {
+            "Ref": "BalanceLambdaFunctionDeploymentGroup"
+          }
+        }
+      },
+      "DependsOn": [
+        "VersionsNestedStack"
+      ]
+    },
+    "RecognitionLambdaFunctionDeploymentGroup": {
+      "Type": "AWS::CodeDeploy::DeploymentGroup",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "UsrvbenefitshubqaDeploymentApplication"
+        },
+        "AutoRollbackConfiguration": {
+          "Enabled": true,
+          "Events": [
+            "DEPLOYMENT_FAILURE",
+            "DEPLOYMENT_STOP_ON_ALARM",
+            "DEPLOYMENT_STOP_ON_REQUEST"
+          ]
+        },
+        "DeploymentConfigName": {
+          "Fn::Sub": [
+            "CodeDeployDefault.Lambda${ConfigName}",
+            {
+              "ConfigName": "AllAtOnce"
+            }
+          ]
+        },
+        "DeploymentStyle": {
+          "DeploymentType": "BLUE_GREEN",
+          "DeploymentOption": "WITH_TRAFFIC_CONTROL"
+        },
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "CodeDeployServiceRole",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": []
+    },
+    "RecognitionLambdaFunctionAliasLive": {
+      "Type": "AWS::Lambda::Alias",
+      "Properties": {
+        "FunctionVersion": {
+          "Fn::GetAtt": [
+            "VersionsNestedStack",
+            "Outputs.RecognitionLambdaVersionNWtLxv8VhESFtcFMc3VF5NxsYXVkb3pYRFGNn0rHVgVersion"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "RecognitionLambdaFunction"
+        },
+        "Name": "Live"
+      },
+      "UpdatePolicy": {
+        "CodeDeployLambdaAliasUpdate": {
+          "ApplicationName": {
+            "Ref": "UsrvbenefitshubqaDeploymentApplication"
+          },
+          "DeploymentGroupName": {
+            "Ref": "RecognitionLambdaFunctionDeploymentGroup"
+          }
+        }
+      },
+      "DependsOn": [
+        "VersionsNestedStack"
+      ]
+    },
+    "TransactionLambdaFunctionDeploymentGroup": {
+      "Type": "AWS::CodeDeploy::DeploymentGroup",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "UsrvbenefitshubqaDeploymentApplication"
+        },
+        "AutoRollbackConfiguration": {
+          "Enabled": true,
+          "Events": [
+            "DEPLOYMENT_FAILURE",
+            "DEPLOYMENT_STOP_ON_ALARM",
+            "DEPLOYMENT_STOP_ON_REQUEST"
+          ]
+        },
+        "DeploymentConfigName": {
+          "Fn::Sub": [
+            "CodeDeployDefault.Lambda${ConfigName}",
+            {
+              "ConfigName": "AllAtOnce"
+            }
+          ]
+        },
+        "DeploymentStyle": {
+          "DeploymentType": "BLUE_GREEN",
+          "DeploymentOption": "WITH_TRAFFIC_CONTROL"
+        },
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "CodeDeployServiceRole",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": []
+    },
+    "TransactionLambdaFunctionAliasLive": {
+      "Type": "AWS::Lambda::Alias",
+      "Properties": {
+        "FunctionVersion": {
+          "Fn::GetAtt": [
+            "VersionsNestedStack",
+            "Outputs.TransactionLambdaVersionP6UHMZbRWxqQlqoyT5Tr7C6ABvUwMZc7kUUiHn48UzwVersion"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "TransactionLambdaFunction"
+        },
+        "Name": "Live"
+      },
+      "UpdatePolicy": {
+        "CodeDeployLambdaAliasUpdate": {
+          "ApplicationName": {
+            "Ref": "UsrvbenefitshubqaDeploymentApplication"
+          },
+          "DeploymentGroupName": {
+            "Ref": "TransactionLambdaFunctionDeploymentGroup"
+          }
+        }
+      },
+      "DependsOn": [
+        "VersionsNestedStack"
+      ]
+    },
+    "CreateTransactionLambdaFunctionDeploymentGroup": {
+      "Type": "AWS::CodeDeploy::DeploymentGroup",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "UsrvbenefitshubqaDeploymentApplication"
+        },
+        "AutoRollbackConfiguration": {
+          "Enabled": true,
+          "Events": [
+            "DEPLOYMENT_FAILURE",
+            "DEPLOYMENT_STOP_ON_ALARM",
+            "DEPLOYMENT_STOP_ON_REQUEST"
+          ]
+        },
+        "DeploymentConfigName": {
+          "Fn::Sub": [
+            "CodeDeployDefault.Lambda${ConfigName}",
+            {
+              "ConfigName": "AllAtOnce"
+            }
+          ]
+        },
+        "DeploymentStyle": {
+          "DeploymentType": "BLUE_GREEN",
+          "DeploymentOption": "WITH_TRAFFIC_CONTROL"
+        },
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "CodeDeployServiceRole",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": []
+    },
+    "CreateTransactionLambdaFunctionAliasLive": {
+      "Type": "AWS::Lambda::Alias",
+      "Properties": {
+        "FunctionVersion": {
+          "Fn::GetAtt": [
+            "VersionsNestedStack",
+            "Outputs.CreateTransactionLambdaVersion2r9y2wQaWuB8xsE0015JxlSYeF7WH8LGNOZr2vxHg4Version"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "CreateTransactionLambdaFunction"
+        },
+        "Name": "Live"
+      },
+      "UpdatePolicy": {
+        "CodeDeployLambdaAliasUpdate": {
+          "ApplicationName": {
+            "Ref": "UsrvbenefitshubqaDeploymentApplication"
+          },
+          "DeploymentGroupName": {
+            "Ref": "CreateTransactionLambdaFunctionDeploymentGroup"
+          }
+        }
+      },
+      "DependsOn": [
+        "VersionsNestedStack"
+      ]
+    },
+    "LoginLambdaFunctionDeploymentGroup": {
+      "Type": "AWS::CodeDeploy::DeploymentGroup",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "UsrvbenefitshubqaDeploymentApplication"
+        },
+        "AutoRollbackConfiguration": {
+          "Enabled": true,
+          "Events": [
+            "DEPLOYMENT_FAILURE",
+            "DEPLOYMENT_STOP_ON_ALARM",
+            "DEPLOYMENT_STOP_ON_REQUEST"
+          ]
+        },
+        "DeploymentConfigName": {
+          "Fn::Sub": [
+            "CodeDeployDefault.Lambda${ConfigName}",
+            {
+              "ConfigName": "AllAtOnce"
+            }
+          ]
+        },
+        "DeploymentStyle": {
+          "DeploymentType": "BLUE_GREEN",
+          "DeploymentOption": "WITH_TRAFFIC_CONTROL"
+        },
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "CodeDeployServiceRole",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": []
+    },
+    "LoginLambdaFunctionAliasLive": {
+      "Type": "AWS::Lambda::Alias",
+      "Properties": {
+        "FunctionVersion": {
+          "Fn::GetAtt": [
+            "VersionsNestedStack",
+            "Outputs.LoginLambdaVersionm5iE1110ww5muiyc2KgQH9Y0gCvztPQbO02tATnpMVersion"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "LoginLambdaFunction"
+        },
+        "Name": "Live"
+      },
+      "UpdatePolicy": {
+        "CodeDeployLambdaAliasUpdate": {
+          "ApplicationName": {
+            "Ref": "UsrvbenefitshubqaDeploymentApplication"
+          },
+          "DeploymentGroupName": {
+            "Ref": "LoginLambdaFunctionDeploymentGroup"
+          }
+        }
+      },
+      "DependsOn": [
+        "VersionsNestedStack"
+      ]
+    },
+    "users": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "usrv-benefits-hub-qa-users",
+        "Tags": [
+          {
+            "Key": "ENVIRONMENT",
+            "Value": "TESTING"
+          },
+          {
+            "Key": "INTEGRATION",
+            "Value": "KUSHKI"
+          },
+          {
+            "Key": "SERVICE",
+            "Value": "STARTER"
+          },
+          {
+            "Key": "COST",
+            "Value": "FIXED"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "email",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "token",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "email",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "token",
+            "KeyType": "RANGE"
+          }
+        ],
+        "StreamSpecification": {
+          "StreamViewType": "NEW_AND_OLD_IMAGES"
+        },
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "existUserIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "email",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          },
+          {
+            "IndexName": "getUserByTokenIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "token",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ]
+      },
+      "DependsOn": []
+    },
+    "orders": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "usrv-benefits-hub-qa-orders",
+        "Tags": [
+          {
+            "Key": "ENVIRONMENT",
+            "Value": "TESTING"
+          },
+          {
+            "Key": "INTEGRATION",
+            "Value": "KUSHKI"
+          },
+          {
+            "Key": "SERVICE",
+            "Value": "STARTER"
+          },
+          {
+            "Key": "COST",
+            "Value": "FIXED"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "orderId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "orderId",
+            "KeyType": "HASH"
+          }
+        ],
+        "StreamSpecification": {
+          "StreamViewType": "NEW_AND_OLD_IMAGES"
+        }
+      },
+      "DependsOn": []
+    },
+    "rewards": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "usrv-benefits-hub-qa-rewards",
+        "Tags": [
+          {
+            "Key": "ENVIRONMENT",
+            "Value": "TESTING"
+          },
+          {
+            "Key": "INTEGRATION",
+            "Value": "KUSHKI"
+          },
+          {
+            "Key": "SERVICE",
+            "Value": "STARTER"
+          },
+          {
+            "Key": "COST",
+            "Value": "FIXED"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "rewardId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "rewardId",
+            "KeyType": "HASH"
+          }
+        ],
+        "StreamSpecification": {
+          "StreamViewType": "NEW_AND_OLD_IMAGES"
+        },
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "getRewardById",
+            "KeySchema": [
+              {
+                "AttributeName": "rewardId",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ]
+      },
+      "DependsOn": []
+    },
+    "shopppingCart": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "usrv-benefits-hub-qa-shopppingCart",
+        "Tags": [
+          {
+            "Key": "ENVIRONMENT",
+            "Value": "TESTING"
+          },
+          {
+            "Key": "INTEGRATION",
+            "Value": "KUSHKI"
+          },
+          {
+            "Key": "SERVICE",
+            "Value": "STARTER"
+          },
+          {
+            "Key": "COST",
+            "Value": "FIXED"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "userEmail",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "userEmail",
+            "KeyType": "HASH"
+          }
+        ],
+        "StreamSpecification": {
+          "StreamViewType": "NEW_AND_OLD_IMAGES"
+        }
+      },
+      "DependsOn": []
+    },
+    "transactions": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "usrv-benefits-hub-qa-transactions",
+        "Tags": [
+          {
+            "Key": "ENVIRONMENT",
+            "Value": "TESTING"
+          },
+          {
+            "Key": "INTEGRATION",
+            "Value": "KUSHKI"
+          },
+          {
+            "Key": "SERVICE",
+            "Value": "STARTER"
+          },
+          {
+            "Key": "COST",
+            "Value": "FIXED"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "transactionId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "fromWalletId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "toWalletId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "transactionId",
+            "KeyType": "HASH"
+          }
+        ],
+        "StreamSpecification": {
+          "StreamViewType": "NEW_AND_OLD_IMAGES"
+        },
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "getTransactionIdIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "transactionId",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          },
+          {
+            "IndexName": "getFromWalletIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "fromWalletId",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          },
+          {
+            "IndexName": "getToWalletIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "toWalletId",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ]
+      },
+      "DependsOn": []
+    },
+    "wallets": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "usrv-benefits-hub-qa-wallets",
+        "Tags": [
+          {
+            "Key": "ENVIRONMENT",
+            "Value": "TESTING"
+          },
+          {
+            "Key": "INTEGRATION",
+            "Value": "KUSHKI"
+          },
+          {
+            "Key": "SERVICE",
+            "Value": "STARTER"
+          },
+          {
+            "Key": "COST",
+            "Value": "FIXED"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "walletId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "walletId",
+            "KeyType": "HASH"
+          }
+        ],
+        "StreamSpecification": {
+          "StreamViewType": "NEW_AND_OLD_IMAGES"
+        },
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "getWalletIDIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "walletId",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ]
+      },
+      "DependsOn": []
+    },
+    "products": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "usrv-benefits-hub-qa-products",
+        "Tags": [
+          {
+            "Key": "ENVIRONMENT",
+            "Value": "TESTING"
+          },
+          {
+            "Key": "INTEGRATION",
+            "Value": "KUSHKI"
+          },
+          {
+            "Key": "SERVICE",
+            "Value": "STARTER"
+          },
+          {
+            "Key": "COST",
+            "Value": "FIXED"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "productId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "productId",
+            "KeyType": "HASH"
+          }
+        ],
+        "StreamSpecification": {
+          "StreamViewType": "NEW_AND_OLD_IMAGES"
+        }
+      },
+      "DependsOn": []
+    },
+    "recognitions": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "usrv-benefits-hub-qa-recognitions",
+        "Tags": [
+          {
+            "Key": "ENVIRONMENT",
+            "Value": "TESTING"
+          },
+          {
+            "Key": "INTEGRATION",
+            "Value": "KUSHKI"
+          },
+          {
+            "Key": "SERVICE",
+            "Value": "STARTER"
+          },
+          {
+            "Key": "COST",
+            "Value": "FIXED"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "recognitionId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "recognitionId",
+            "KeyType": "HASH"
+          }
+        ],
+        "StreamSpecification": {
+          "StreamViewType": "NEW_AND_OLD_IMAGES"
+        }
+      },
+      "DependsOn": []
+    },
+    "VersionsNestedStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "Parameters": {
+          "BalanceLambdaFunctionParameter": {
+            "Ref": "BalanceLambdaFunction"
+          },
+          "RecognitionLambdaFunctionParameter": {
+            "Ref": "RecognitionLambdaFunction"
+          },
+          "TransactionLambdaFunctionParameter": {
+            "Ref": "TransactionLambdaFunction"
+          },
+          "CreateTransactionLambdaFunctionParameter": {
+            "Ref": "CreateTransactionLambdaFunction"
+          },
+          "LoginLambdaFunctionParameter": {
+            "Ref": "LoginLambdaFunction"
+          }
+        },
+        "TemplateURL": {
+          "Fn::Join": [
+            "/",
+            [
+              "https://s3.us-east-1.amazonaws.com",
+              {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "serverless/usrv-benefits-hub/qa/1685689315652-2023-06-02T07:01:55.652Z",
+              "cloudformation-template-Versions-nested-stack.json"
+            ]
+          ]
+        }
+      },
+      "DependsOn": [
+        "BalanceLambdaFunction",
+        "RecognitionLambdaFunction",
+        "TransactionLambdaFunction",
+        "CreateTransactionLambdaFunction",
+        "LoginLambdaFunction"
+      ]
+    },
+    "APINestedStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "Parameters": {},
+        "TemplateURL": {
+          "Fn::Join": [
+            "/",
+            [
+              "https://s3.us-east-1.amazonaws.com",
+              {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "serverless/usrv-benefits-hub/qa/1685689315652-2023-06-02T07:01:55.652Z",
+              "cloudformation-template-API-nested-stack.json"
+            ]
+          ]
+        }
+      }
+    },
+    "PermissionsNestedStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "Parameters": {
+          "ApiGatewayRestApiParameter": {
+            "Fn::GetAtt": [
+              "APINestedStack",
+              "Outputs.ApiGatewayRestApi"
+            ]
+          },
+          "BalanceLambdaFunctionAliasLiveParameter": {
+            "Ref": "BalanceLambdaFunctionAliasLive"
+          },
+          "RecognitionLambdaFunctionAliasLiveParameter": {
+            "Ref": "RecognitionLambdaFunctionAliasLive"
+          },
+          "TransactionLambdaFunctionAliasLiveParameter": {
+            "Ref": "TransactionLambdaFunctionAliasLive"
+          },
+          "CreateTransactionLambdaFunctionAliasLiveParameter": {
+            "Ref": "CreateTransactionLambdaFunctionAliasLive"
+          },
+          "LoginLambdaFunctionAliasLiveParameter": {
+            "Ref": "LoginLambdaFunctionAliasLive"
+          }
+        },
+        "TemplateURL": {
+          "Fn::Join": [
+            "/",
+            [
+              "https://s3.us-east-1.amazonaws.com",
+              {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "serverless/usrv-benefits-hub/qa/1685689315652-2023-06-02T07:01:55.652Z",
+              "cloudformation-template-Permissions-nested-stack.json"
+            ]
+          ]
+        }
+      },
+      "DependsOn": [
+        "APINestedStack",
+        "BalanceLambdaFunctionAliasLive",
+        "RecognitionLambdaFunctionAliasLive",
+        "TransactionLambdaFunctionAliasLive",
+        "CreateTransactionLambdaFunctionAliasLive",
+        "LoginLambdaFunctionAliasLive"
+      ]
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": {
+        "Ref": "ServerlessDeploymentBucket"
+      }
+    },
+    "BalanceLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Fn::GetAtt": [
+          "VersionsNestedStack",
+          "Outputs.BalanceLambdaVersionezn37AfrOBVlOVfsLHfif8Mlf27PLDAMDLfs8iYZ4gs"
+        ]
+      }
+    },
+    "RecognitionLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Fn::GetAtt": [
+          "VersionsNestedStack",
+          "Outputs.RecognitionLambdaVersionNWtLxv8VhESFtcFMc3VF5NxsYXVkb3pYRFGNn0rHVg"
+        ]
+      }
+    },
+    "TransactionLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Fn::GetAtt": [
+          "VersionsNestedStack",
+          "Outputs.TransactionLambdaVersionP6UHMZbRWxqQlqoyT5Tr7C6ABvUwMZc7kUUiHn48Uzw"
+        ]
+      }
+    },
+    "CreateTransactionLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Fn::GetAtt": [
+          "VersionsNestedStack",
+          "Outputs.CreateTransactionLambdaVersion2r9y2wQaWuB8xsE0015JxlSYeF7WH8LGNOZr2vxHg4"
+        ]
+      }
+    },
+    "LoginLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Fn::GetAtt": [
+          "VersionsNestedStack",
+          "Outputs.LoginLambdaVersionm5iE1110ww5muiyc2KgQH9Y0gCvztPQbO02tATnpM"
+        ]
+      }
+    },
+    "ServiceEndpoint": {
+      "Description": "URL of the service endpoint",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Fn::GetAtt": [
+                "APINestedStack",
+                "Outputs.ApiGatewayRestApi"
+              ]
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix"
+            },
+            "/qa"
+          ]
+        ]
+      }
+    },
+    "RestApiIdForApigCaching": {
+      "Description": "REST API ID",
+      "Value": {
+        "Fn::GetAtt": [
+          "APINestedStack",
+          "Outputs.ApiGatewayRestApi"
+        ]
+      }
+    }
+  }
+}

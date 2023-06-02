@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "Order",
+  "title": "Order",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["orderId", "items", "transactionTotal", "status"],
+  "properties": {
+    "orderId": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["productId", "value", "quantity"],
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number",
+            "minimum": 0
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "transactionTotal": {
+      "type": "number",
+      "minimum": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "completed", "cancelled"]
+    }
+  }
+}

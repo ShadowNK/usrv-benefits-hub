@@ -1,0 +1,145 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "VersionsNestedStack nested stack",
+  "Parameters": {
+    "BalanceLambdaFunctionParameter": {
+      "Type": "String"
+    },
+    "RecognitionLambdaFunctionParameter": {
+      "Type": "String"
+    },
+    "TransactionLambdaFunctionParameter": {
+      "Type": "String"
+    },
+    "CreateTransactionLambdaFunctionParameter": {
+      "Type": "String"
+    },
+    "LoginLambdaFunctionParameter": {
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "BalanceLambdaVersionezn37AfrOBVlOVfsLHfif8Mlf27PLDAMDLfs8iYZ4gs": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "BalanceLambdaFunctionParameter"
+        },
+        "CodeSha256": "xfQmLvO7+iuJRFwiTvb3raPPVAHqp2Nq8O2JpLVtcQ8="
+      },
+      "DependsOn": []
+    },
+    "RecognitionLambdaVersionNWtLxv8VhESFtcFMc3VF5NxsYXVkb3pYRFGNn0rHVg": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "RecognitionLambdaFunctionParameter"
+        },
+        "CodeSha256": "svKBTgjVsiWziRclgDkhvEf9O/sXW59vRqudRKeY8tI="
+      },
+      "DependsOn": []
+    },
+    "TransactionLambdaVersionP6UHMZbRWxqQlqoyT5Tr7C6ABvUwMZc7kUUiHn48Uzw": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "TransactionLambdaFunctionParameter"
+        },
+        "CodeSha256": "Bxy7DzwJ9GVpXW91et2opMd1xsp8QWOdEvTnHVwC7QA="
+      },
+      "DependsOn": []
+    },
+    "CreateTransactionLambdaVersion2r9y2wQaWuB8xsE0015JxlSYeF7WH8LGNOZr2vxHg4": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "CreateTransactionLambdaFunctionParameter"
+        },
+        "CodeSha256": "Bxy7DzwJ9GVpXW91et2opMd1xsp8QWOdEvTnHVwC7QA="
+      },
+      "DependsOn": []
+    },
+    "LoginLambdaVersionm5iE1110ww5muiyc2KgQH9Y0gCvztPQbO02tATnpM": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "LoginLambdaFunctionParameter"
+        },
+        "CodeSha256": "Bxy7DzwJ9GVpXW91et2opMd1xsp8QWOdEvTnHVwC7QA="
+      },
+      "DependsOn": []
+    }
+  },
+  "Outputs": {
+    "BalanceLambdaVersionezn37AfrOBVlOVfsLHfif8Mlf27PLDAMDLfs8iYZ4gsVersion": {
+      "Value": {
+        "Fn::GetAtt": [
+          "BalanceLambdaVersionezn37AfrOBVlOVfsLHfif8Mlf27PLDAMDLfs8iYZ4gs",
+          "Version"
+        ]
+      }
+    },
+    "RecognitionLambdaVersionNWtLxv8VhESFtcFMc3VF5NxsYXVkb3pYRFGNn0rHVgVersion": {
+      "Value": {
+        "Fn::GetAtt": [
+          "RecognitionLambdaVersionNWtLxv8VhESFtcFMc3VF5NxsYXVkb3pYRFGNn0rHVg",
+          "Version"
+        ]
+      }
+    },
+    "TransactionLambdaVersionP6UHMZbRWxqQlqoyT5Tr7C6ABvUwMZc7kUUiHn48UzwVersion": {
+      "Value": {
+        "Fn::GetAtt": [
+          "TransactionLambdaVersionP6UHMZbRWxqQlqoyT5Tr7C6ABvUwMZc7kUUiHn48Uzw",
+          "Version"
+        ]
+      }
+    },
+    "CreateTransactionLambdaVersion2r9y2wQaWuB8xsE0015JxlSYeF7WH8LGNOZr2vxHg4Version": {
+      "Value": {
+        "Fn::GetAtt": [
+          "CreateTransactionLambdaVersion2r9y2wQaWuB8xsE0015JxlSYeF7WH8LGNOZr2vxHg4",
+          "Version"
+        ]
+      }
+    },
+    "LoginLambdaVersionm5iE1110ww5muiyc2KgQH9Y0gCvztPQbO02tATnpMVersion": {
+      "Value": {
+        "Fn::GetAtt": [
+          "LoginLambdaVersionm5iE1110ww5muiyc2KgQH9Y0gCvztPQbO02tATnpM",
+          "Version"
+        ]
+      }
+    },
+    "LoginLambdaVersionm5iE1110ww5muiyc2KgQH9Y0gCvztPQbO02tATnpM": {
+      "Value": {
+        "Ref": "LoginLambdaVersionm5iE1110ww5muiyc2KgQH9Y0gCvztPQbO02tATnpM"
+      }
+    },
+    "CreateTransactionLambdaVersion2r9y2wQaWuB8xsE0015JxlSYeF7WH8LGNOZr2vxHg4": {
+      "Value": {
+        "Ref": "CreateTransactionLambdaVersion2r9y2wQaWuB8xsE0015JxlSYeF7WH8LGNOZr2vxHg4"
+      }
+    },
+    "TransactionLambdaVersionP6UHMZbRWxqQlqoyT5Tr7C6ABvUwMZc7kUUiHn48Uzw": {
+      "Value": {
+        "Ref": "TransactionLambdaVersionP6UHMZbRWxqQlqoyT5Tr7C6ABvUwMZc7kUUiHn48Uzw"
+      }
+    },
+    "RecognitionLambdaVersionNWtLxv8VhESFtcFMc3VF5NxsYXVkb3pYRFGNn0rHVg": {
+      "Value": {
+        "Ref": "RecognitionLambdaVersionNWtLxv8VhESFtcFMc3VF5NxsYXVkb3pYRFGNn0rHVg"
+      }
+    },
+    "BalanceLambdaVersionezn37AfrOBVlOVfsLHfif8Mlf27PLDAMDLfs8iYZ4gs": {
+      "Value": {
+        "Ref": "BalanceLambdaVersionezn37AfrOBVlOVfsLHfif8Mlf27PLDAMDLfs8iYZ4gs"
+      }
+    }
+  }
+}

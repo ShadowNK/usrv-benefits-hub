@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "Wallet",
+  "title": "Wallet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["walletId", "balance"],
+  "properties": {
+    "walletId": {
+      "type": "string"
+    },
+    "balance": {
+      "type": "number",
+      "minimum": 0
+    }
+  }
+}

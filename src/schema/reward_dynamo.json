@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "Reward",
+  "title": "Reward",
+  "type": "object",
+  "required": ["rewardId", "name", "value"],
+  "properties": {
+    "rewardId": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "value": {
+      "type": "number",
+      "minimum": 0
+    }
+  }
+}

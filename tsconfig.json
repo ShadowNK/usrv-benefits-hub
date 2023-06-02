@@ -1,0 +1,21 @@
+{
+  "extends": "@kushki/tsconfig",
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "baseUrl": ".",
+    "paths": {
+      "handler/*": ["src/handler/*"],
+      "constant/*": ["src/constant/*"],
+      "error/*": ["src/error/*"],
+      "gateway/*": ["src/gateway/*"],
+      "infrastructure/*": ["src/infrastructure/*"],
+      "middleware/*": ["src/middleware/*"],
+      "repository/*": ["src/repository/*"],
+      "service/*": ["src/service/*"],
+      "typings": ["typings.d.ts"],
+      "types/*": ["types/*"],
+      "soap/*": ["src/soap/*"],
+      "resources/*": ["resources/*"]
+    }
+  }
+}

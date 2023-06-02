@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "ShoppingCart",
+  "title": "ShoppingCart",
+  "type": "object",
+  "required": ["userEmail", "items"],
+  "properties": {
+    "userEmail": {
+      "type": "string",
+      "format": "email"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["productId", "quantity"],
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

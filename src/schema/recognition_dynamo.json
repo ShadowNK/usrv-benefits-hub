@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "Recognition",
+  "title": "Recognition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["recognitionId", "from", "to", "message", "status", "transactionId", "rewardId"],
+  "properties": {
+    "recognitionId": {
+      "type": "string"
+    },
+    "from": {
+      "type": "string"
+    },
+    "to": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["Pendiente", "Aprobado", "Rechazado", "Fallido"]
+    },
+    "transactionId": {
+      "type": "string"
+    },
+    "rewardId": {
+      "type": "string"
+    }
+  }
+}

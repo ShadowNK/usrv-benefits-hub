@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# direnv settings (https://direnv.net/) "brew install direnv"
+
+# AWS
+export AWS_ACCESS_KEY_ID=*****
+export AWS_SECRET_ACCESS_KEY=*****
+export AWS_REGION=us-east-1
+export SLS_DEBUG=*
+
+# Usrv environment
+export USRV_STAGE=dev
+usrv_full_branch="$(git symbolic-ref HEAD 2>/dev/null)"
+export USRV_BRANCH=${usrv_full_branch##refs/heads/}
+export USRV_COMMIT="$(git rev-parse HEAD)"
+
+# Development
+export ROLLBAR_TOKEN=******
+export USRV_DOMAIN=www.example.com
+export USRV_CERT=*.example.com

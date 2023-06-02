@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "Transaction",
+  "title": "Transaction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["transactionId", "fromWalletId", "toWalletId", "amount", "status"],
+  "properties": {
+    "transactionId": {
+      "type": "string"
+    },
+    "fromWalletId": {
+      "type": "string"
+    },
+    "toWalletId": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number",
+      "minimum": 0
+    },
+    "date": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["Pendiente", "Aprobado", "Rechazado", "Fallido"]
+    },
+    "reason": {
+      "type": "string"
+    }
+  }
+}

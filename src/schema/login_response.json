@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "LoginResponse",
+  "title": "LoginResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "token"],
+  "properties": {
+    "balance": {
+      "type": "number"
+    },
+    "token": {
+      "type": "string"
+    }
+  }
+}

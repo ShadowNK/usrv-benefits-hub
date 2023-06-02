@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "Product",
+  "title": "Product",
+  "type": "object",
+  "required": ["productId", "name", "value", "stock"],
+  "properties": {
+    "productId": {
+      "type": "string"
+    },
+    "image": {
+      "type": "string",
+      "format": "uri"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "value": {
+      "type": "number",
+      "minimum": 0
+    },
+    "category": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "stock": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["size", "quantity"],
+        "properties": {
+          "size": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

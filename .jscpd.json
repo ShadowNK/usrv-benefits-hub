@@ -1,0 +1,10 @@
+{
+  "format": ["typescript", "javascript", "yaml"],
+  "ignore": ["**/handler/**/*", "**/*.spec.ts", "serverless.yml"],
+  "reporters": ["consoleFull", "threshold"],
+  "output": ".jscpd",
+  "threshold": 0.1,
+  "mode": "mild",
+  "gitignore": true,
+  "minLines": "12"
+}

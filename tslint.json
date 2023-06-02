@@ -1,0 +1,5 @@
+{
+  "extends": ["@kushki/tslint", "tslint-config-prettier"],
+  "exclude": ["**/dist/**", "**/node_modules/**"],
+  "rules": {}
+}

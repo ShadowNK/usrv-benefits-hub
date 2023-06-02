@@ -1,0 +1,10 @@
+package.json
+package-lock.json
+.jscpd.json
+lib/
+dist/
+.nyc_output/
+.jenkins/
+.coverage/
+.cache-loader/
+.jscpd/

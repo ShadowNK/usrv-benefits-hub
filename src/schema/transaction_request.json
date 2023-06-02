@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "TransactionRequest",
+  "title": "TransactionRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["token", "email", "amount", "reason"],
+  "properties": {
+    "token": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "reason": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "*.{ts,js,json,yml,yaml}": ["prettier --write", "git add"],
+  ".{kushkirc,nycrc,prettierrc}": [
+    "prettier --write",
+    "git add"
+  ],
+  "*.ts": [
+    "tslint -t stylish --fix --project tsconfig.json -c tslint.json",
+    "git add"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "LoginRequest",
+  "title": "LoginRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "email", "verified_email", "name", "given_name", "family_name", "picture", "locale", "hd"],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "verified_email": {
+      "type": "boolean"
+    },
+    "name": {
+      "type": "string"
+    },
+    "given_name": {
+      "type": "string"
+    },
+    "family_name": {
+      "type": "string"
+    },
+    "picture": {
+      "type": "string",
+      "format": "uri"
+    },
+    "locale": {
+      "type": "string"
+    },
+    "hd": {
+      "type": "string"
+    }
+  }
+}
